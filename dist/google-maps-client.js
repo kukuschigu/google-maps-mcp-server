@@ -263,9 +263,10 @@ export class GoogleMapsClient {
         if (options.sessionToken)
             body.sessionToken = options.sessionToken;
         // Use user-requested fields if provided, otherwise use comprehensive default
+        // GET /v1/places/{id} does NOT use "places." prefix (unlike POST search methods)
         const fieldMask = options.fields && options.fields.length > 0
-            ? this.transformPlacesFields(options.fields)
-            : 'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.rating,places.types,places.photos,places.currentOpeningHours,places.priceLevel';
+            ? this.transformPlacesFields(options.fields, false)
+            : 'id,displayName,formattedAddress,addressComponents,location,rating,types,photos,currentOpeningHours,priceLevel';
         const data = await this.makeRequest(`/v1/places/${placeId}`, {}, 'GET', undefined, 300000, 'https://places.googleapis.com', fieldMask);
         return this.formatPlaceResult(data);
     }
@@ -386,9 +387,11 @@ export class GoogleMapsClient {
     }
     /**
      * Transform user-friendly field names to Google Places API (New) format
-     * Maps snake_case/friendly names to camelCase with places. prefix
+     * Maps snake_case/friendly names to camelCase
+     * @param fields - Array of user-friendly field names
+     * @param addPrefix - Whether to add "places." prefix (true for POST search, false for GET details)
      */
-    transformPlacesFields(fields) {
+    transformPlacesFields(fields, addPrefix = true) {
         const fieldMap = {
             'name': 'displayName',
             'formatted_address': 'formattedAddress',
@@ -408,17 +411,18 @@ export class GoogleMapsClient {
             'business_status': 'businessStatus',
             'user_ratings_total': 'userRatingCount'
         };
-        console.error('[MCP Maps] Transforming fields:', JSON.stringify({ input: fields }));
+        console.error('[MCP Maps] Transforming fields:', JSON.stringify({ input: fields, addPrefix }));
         const transformedFields = fields.map(field => {
             const lowerField = field.toLowerCase();
             // If field is already in camelCase format (displayName, formattedAddress, etc.), use as-is
             // Otherwise map from snake_case to camelCase
             const mappedField = fieldMap[lowerField] || field;
-            return `places.${mappedField}`;
+            return addPrefix ? `places.${mappedField}` : mappedField;
         });
         // Always include id for identification
-        if (!transformedFields.includes('places.id')) {
-            transformedFields.unshift('places.id');
+        const idField = addPrefix ? 'places.id' : 'id';
+        if (!transformedFields.includes(idField)) {
+            transformedFields.unshift(idField);
         }
         const result = transformedFields.join(',');
         console.error('[MCP Maps] Transformed field mask:', result);

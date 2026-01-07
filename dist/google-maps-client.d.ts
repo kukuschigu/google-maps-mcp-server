@@ -113,7 +113,9 @@ export declare class GoogleMapsClient {
     private formatLocationForRoutes;
     /**
      * Transform user-friendly field names to Google Places API (New) format
-     * Maps snake_case/friendly names to camelCase with places. prefix
+     * Maps snake_case/friendly names to camelCase
+     * @param fields - Array of user-friendly field names
+     * @param addPrefix - Whether to add "places." prefix (true for POST search, false for GET details)
      */
     private transformPlacesFields;
     private formatPlaceResults;
