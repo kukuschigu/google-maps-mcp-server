@@ -268,7 +268,7 @@ export class GoogleMapsClient {
     if (options.language) body.languageCode = options.language;
     if (options.region) body.regionCode = options.region;
 
-    const data = await this.makeRequest('/v1/places:searchText', {}, 'POST', body, 60000, 'https://places.googleapis.com');
+    const data = await this.makeRequest('/v1/places:searchText', {}, 'POST', body, 60000, 'https://places.googleapis.com', 'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.rating,places.types,places.photos');
 
     return this.formatPlaceResults(data.places || []);
   }
@@ -300,7 +300,7 @@ export class GoogleMapsClient {
     if (options.language) body.languageCode = options.language;
     if (options.region) body.regionCode = options.region;
 
-    const data = await this.makeRequest('/v1/places:searchNearby', {}, 'POST', body, 60000, 'https://places.googleapis.com');
+    const data = await this.makeRequest('/v1/places:searchNearby', {}, 'POST', body, 60000, 'https://places.googleapis.com', 'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.rating,places.types,places.photos');
 
     return this.formatPlaceResults(data.places || []);
   }
@@ -343,7 +343,7 @@ export class GoogleMapsClient {
     if (options.region) body.regionCode = options.region;
     if (options.sessionToken) body.sessionToken = options.sessionToken;
 
-    const data = await this.makeRequest(`/v1/places/${placeId}`, {}, 'GET', undefined, 300000, 'https://places.googleapis.com');
+    const data = await this.makeRequest(`/v1/places/${placeId}`, {}, 'GET', undefined, 300000, 'https://places.googleapis.com', 'id,displayName,formattedAddress,addressComponents,location,rating,types,photos,opening_hours,price_level');
 
     return this.formatPlaceResult(data);
   }
