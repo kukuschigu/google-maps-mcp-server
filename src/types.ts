@@ -240,6 +240,19 @@ export interface PlaceResult {
     height: number;
     width: number;
   }>;
+  reviews?: Array<{
+    author_name?: string;
+    rating?: number;
+    text?: string;
+    time?: number;
+  }>;
+  editorial_summary?: {
+    overview?: string;
+  };
+  website?: string;
+  phone_number?: string;
+  international_phone_number?: string;
+  user_ratings_total?: number;
 }
 
 export interface RouteResult {

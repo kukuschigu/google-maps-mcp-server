@@ -624,7 +624,21 @@ export class GoogleMapsClient {
     if (place.rating) result.rating = place.rating;
     if (place.price_level !== undefined) result.price_level = place.price_level;
     if (place.types) result.types = place.types;
+
+    // Support both old API (opening_hours) and new API (currentOpeningHours, regularOpeningHours)
     if (place.opening_hours) result.opening_hours = place.opening_hours;
+    if (place.currentOpeningHours) result.opening_hours = place.currentOpeningHours;
+    if (place.regularOpeningHours) result.opening_hours = place.regularOpeningHours;
+
+    // New Places API fields
+    if (place.reviews) result.reviews = place.reviews;
+    if (place.editorialSummary) result.editorial_summary = place.editorialSummary;
+    if (place.websiteUri) result.website = place.websiteUri;
+    if (place.nationalPhoneNumber) result.phone_number = place.nationalPhoneNumber;
+    if (place.internationalPhoneNumber) result.international_phone_number = place.internationalPhoneNumber;
+    if (place.priceLevel) result.price_level = place.priceLevel;
+    if (place.userRatingCount) result.user_ratings_total = place.userRatingCount;
+
     if (place.photos) result.photos = place.photos;
 
     return result;
