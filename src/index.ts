@@ -673,12 +673,13 @@ class GoogleMapsMCPServer {
 
     const transformed = { ...locationBias };
 
-    // Transform circle.center coordinates
+    // Transform circle.center coordinates and radius_meters → radius
     if (transformed.circle?.center) {
       console.error('[MCP Maps] Transforming locationBias.circle.center');
       transformed.circle = {
-        ...transformed.circle,
-        center: this.transformLocation(transformed.circle.center)
+        center: this.transformLocation(transformed.circle.center),
+        // Google Places API (New) uses "radius" not "radius_meters"
+        radius: transformed.circle.radius_meters || transformed.circle.radius
       };
       console.error('[MCP Maps] Transformed locationBias:', JSON.stringify(transformed));
     }
