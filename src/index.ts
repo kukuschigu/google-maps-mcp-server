@@ -653,6 +653,39 @@ class GoogleMapsMCPServer {
     });
   }
 
+  // Parameter transformation helpers
+  // Google Places API (New) uses latitude/longitude, not lat/lng
+  private transformLocation(location: any): any {
+    if (!location) return location;
+    if (location.lat !== undefined && location.lng !== undefined) {
+      const transformed = {
+        latitude: location.lat,
+        longitude: location.lng
+      };
+      console.error('[MCP Maps] Transformed location:', JSON.stringify({ from: location, to: transformed }));
+      return transformed;
+    }
+    return location;
+  }
+
+  private transformLocationBias(locationBias: any): any {
+    if (!locationBias) return locationBias;
+
+    const transformed = { ...locationBias };
+
+    // Transform circle.center coordinates
+    if (transformed.circle?.center) {
+      console.error('[MCP Maps] Transforming locationBias.circle.center');
+      transformed.circle = {
+        ...transformed.circle,
+        center: this.transformLocation(transformed.circle.center)
+      };
+      console.error('[MCP Maps] Transformed locationBias:', JSON.stringify(transformed));
+    }
+
+    return transformed;
+  }
+
   // Tool handlers
   private async handleGeocodeSearch(args: any) {
     const input = GeocodeSearchSchema.parse(args);
@@ -690,7 +723,7 @@ class GoogleMapsMCPServer {
       openNow: input.open_now,
       priceLevels: input.price_levels,
       minRating: input.min_rating,
-      locationBias: input.location_bias,
+      locationBias: this.transformLocationBias(input.location_bias),
       rankPreference: input.rank_preference,
       language: input.language,
       region: input.region,
@@ -709,12 +742,16 @@ class GoogleMapsMCPServer {
 
   private async handlePlacesNearby(args: any) {
     const input = PlacesNearbySchema.parse(args);
-    const results = await this.googleMapsClient.placesNearby(input.location, input.radius_meters, {
-      includedTypes: input.included_types,
-      maxResults: input.max_results,
-      language: input.language,
-      region: input.region
-    });
+    const results = await this.googleMapsClient.placesNearby(
+      this.transformLocation(input.location),
+      input.radius_meters,
+      {
+        includedTypes: input.included_types,
+        maxResults: input.max_results,
+        language: input.language,
+        region: input.region
+      }
+    );
 
     return {
       content: [
@@ -730,7 +767,7 @@ class GoogleMapsMCPServer {
     const input = PlacesAutocompleteSchema.parse(args);
     const results = await this.googleMapsClient.placesAutocomplete(input.input, {
       sessionToken: input.session_token,
-      locationBias: input.location_bias,
+      locationBias: this.transformLocationBias(input.location_bias),
       includedTypes: input.included_types,
       language: input.language,
       region: input.region

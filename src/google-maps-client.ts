@@ -343,7 +343,12 @@ export class GoogleMapsClient {
     if (options.region) body.regionCode = options.region;
     if (options.sessionToken) body.sessionToken = options.sessionToken;
 
-    const data = await this.makeRequest(`/v1/places/${placeId}`, {}, 'GET', undefined, 300000, 'https://places.googleapis.com', 'id,displayName,formattedAddress,addressComponents,location,rating,types,photos,opening_hours,price_level');
+    // Use user-requested fields if provided, otherwise use comprehensive default
+    const fieldMask = options.fields && options.fields.length > 0
+      ? this.transformPlacesFields(options.fields)
+      : 'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.location,places.rating,places.types,places.photos,places.currentOpeningHours,places.priceLevel';
+
+    const data = await this.makeRequest(`/v1/places/${placeId}`, {}, 'GET', undefined, 300000, 'https://places.googleapis.com', fieldMask);
 
     return this.formatPlaceResult(data);
   }
@@ -536,6 +541,52 @@ export class GoogleMapsClient {
       return { location: { address: location.address } };
     }
     return { location: { latLng: { latitude: location.lat, longitude: location.lng } } };
+  }
+
+  /**
+   * Transform user-friendly field names to Google Places API (New) format
+   * Maps snake_case/friendly names to camelCase with places. prefix
+   */
+  private transformPlacesFields(fields: string[]): string {
+    const fieldMap: Record<string, string> = {
+      'name': 'displayName',
+      'formatted_address': 'formattedAddress',
+      'address_components': 'addressComponents',
+      'editorial_summary': 'editorialSummary',
+      'reviews': 'reviews',
+      'rating': 'rating',
+      'opening_hours': 'currentOpeningHours',
+      'regular_opening_hours': 'regularOpeningHours',
+      'location': 'location',
+      'types': 'types',
+      'photos': 'photos',
+      'price_level': 'priceLevel',
+      'phone_number': 'nationalPhoneNumber',
+      'international_phone_number': 'internationalPhoneNumber',
+      'website': 'websiteUri',
+      'business_status': 'businessStatus',
+      'user_ratings_total': 'userRatingCount'
+    };
+
+    console.error('[MCP Maps] Transforming fields:', JSON.stringify({ input: fields }));
+
+    const transformedFields = fields.map(field => {
+      const lowerField = field.toLowerCase();
+      // If field is already in camelCase format (displayName, formattedAddress, etc.), use as-is
+      // Otherwise map from snake_case to camelCase
+      const mappedField = fieldMap[lowerField] || field;
+      return `places.${mappedField}`;
+    });
+
+    // Always include id for identification
+    if (!transformedFields.includes('places.id')) {
+      transformedFields.unshift('places.id');
+    }
+
+    const result = transformedFields.join(',');
+    console.error('[MCP Maps] Transformed field mask:', result);
+
+    return result;
   }
 
   private formatPlaceResults(places: any[]): PlaceResult[] {

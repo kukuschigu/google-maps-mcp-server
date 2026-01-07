@@ -111,6 +111,11 @@ export declare class GoogleMapsClient {
     }>;
     roadsNearest(points: Location[], travelMode?: string): Promise<any>;
     private formatLocationForRoutes;
+    /**
+     * Transform user-friendly field names to Google Places API (New) format
+     * Maps snake_case/friendly names to camelCase with places. prefix
+     */
+    private transformPlacesFields;
     private formatPlaceResults;
     private formatPlaceResult;
     private formatRouteResult;
