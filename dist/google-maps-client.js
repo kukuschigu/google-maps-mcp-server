@@ -388,8 +388,14 @@ export class GoogleMapsClient {
             id: place.place_id || place.id,
             name: place.name || place.displayName?.text || 'Unknown'
         };
+        // Support both old API (formatted_address) and new API (formattedAddress)
         if (place.formatted_address)
             result.formatted_address = place.formatted_address;
+        if (place.formattedAddress)
+            result.formatted_address = place.formattedAddress;
+        // Include addressComponents from new Places API
+        if (place.addressComponents)
+            result.address_components = place.addressComponents;
         if (place.geometry?.location) {
             result.location = {
                 lat: place.geometry.location.lat,

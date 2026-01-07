@@ -286,6 +286,12 @@ export interface PlaceResult {
     id: string;
     name: string;
     formatted_address?: string;
+    address_components?: Array<{
+        longText: string;
+        shortText: string;
+        types: string[];
+        languageCode?: string;
+    }>;
     location?: Location;
     rating?: number;
     price_level?: number;
